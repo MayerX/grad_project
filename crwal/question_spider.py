@@ -1,4 +1,5 @@
 import csv
+import os.path
 import time
 
 import openpyexcel
@@ -27,6 +28,8 @@ def spider(universities_code_path):
         print('开始爬取{}的招生问题'.format(universities_name))
         logger.info('开始爬取{}的招生问题'.format(universities_name))
         print('------------------------')
+        if not os.path.exists('./data/questions'):
+            os.makedirs('./data/questions')
         file_path = './data/questions/{}.csv'.format(universities_name)
         spider_to_csv(file_path, forumid[:-1])
         time.sleep(20)
@@ -39,10 +42,10 @@ def spider_to_csv(file_path, code):
         # 设置csv写入变量
         writer = csv.writer(file)
         # 设置csv文件标题头
-        writer.writerow(['ID', '问题', '答案'])
+        writer.writerow(['ID','标签', '问题', '答案'])
         # 获取最大页数
         response = requests.get(
-            'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2005,start-{}.dhtml'.format(
+            'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2017,start-{}.dhtml'.format(
                 code, 0))
         # 解析网页信息
         soup = BeautifulSoup(response.content, 'lxml')
@@ -58,7 +61,7 @@ def spider_to_csv(file_path, code):
             print('------------------------')
             try:
                 response = requests.get(
-                    'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2005,start-{}.dhtml'.format(
+                    'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2017,start-{}.dhtml'.format(
                         code, page))
             except HTTPError as e:
                 logger.error(e)
@@ -74,7 +77,7 @@ def spider_to_csv(file_path, code):
                 answer = answer.text.replace("\r\n", "").replace("\n", "").replace(" ", "")[5:]
                 # print('ID: ' + index.__str__() + ' - ''question: ', question, ' - ', 'answer: ', answer)
                 logger.info('ID: ' + str(index) + ' - ' + 'question: ' + question + ' - ' + 'answer: ' + answer)
-                writer.writerow([index, question, answer])
+                writer.writerow([index, 0, question, answer])
                 index += 1
             time.sleep(2)
         file.close()
@@ -123,6 +126,7 @@ def spider_to_excel(province_id):
                 sheet.cell(index, 2, value=question)
                 sheet.cell(index, 3, value=answer)
                 index += 1
+            response.close()
     print("保存Excel")
     book.save('data/question_answer.xlsx')
 
