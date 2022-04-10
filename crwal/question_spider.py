@@ -3,8 +3,10 @@ import time
 
 import openpyexcel
 import requests
+from requests.exceptions import HTTPError
 from bs4 import BeautifulSoup
 
+from logs.logger import logger
 from pre_question_spider import pre_question_spider
 
 
@@ -23,6 +25,7 @@ def spider(universities_code_path):
         # print('code: ' + forumid[:-1])
         print('------------------------')
         print('开始爬取{}的招生问题'.format(universities_name))
+        logger.info('开始爬取{}的招生问题'.format(universities_name))
         print('------------------------')
         file_path = 'questions/{}.csv'.format(universities_name)
         spider_to_csv(file_path, forumid[:-1])
@@ -51,10 +54,14 @@ def spider_to_csv(file_path, code):
         for page in range(0, max_page, 15):
             print('------------------------')
             print("当前页面: ", page / 15)
+            logger.info("当前页面: ", page / 15)
             print('------------------------')
-            response = requests.get(
-                'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2005,start-{}.dhtml'.format(
-                    code, page))
+            try:
+                response = requests.get(
+                    'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2005,start-{}.dhtml'.format(
+                        code, page))
+            except HTTPError as e:
+                logger.error(e)
             soup = BeautifulSoup(response.content, 'lxml')
             # 找到该页面所有问题和答案
             questions = soup.find_all('div', attrs={"class": "question"})
@@ -65,9 +72,11 @@ def spider_to_csv(file_path, code):
             for question, answer in zip(questions, answers):
                 question = question.text.replace(" ", "").replace("\r\n", "").replace("\n", "")
                 answer = answer.text.replace("\r\n", "").replace("\n", "").replace(" ", "")[5:]
-                print('ID: ' + index.__str__() + ' - ''question: ', question, ' - ', 'answer: ', answer)
+                # print('ID: ' + index.__str__() + ' - ''question: ', question, ' - ', 'answer: ', answer)
+                logger.info('ID: ' + index.__str__() + ' - ''question: ', question, ' - ', 'answer: ', answer)
                 writer.writerow([index, question, answer])
                 index += 1
+            time.sleep(1)
         file.close()
     pass
 
@@ -119,5 +128,6 @@ def spider_to_excel(province_id):
 
 
 if __name__ == "__main__":
+    logger = logger()
     universities_code_path = 'data/universities_code.txt'
     spider(universities_code_path)
