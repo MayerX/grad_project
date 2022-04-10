@@ -21,7 +21,8 @@ def logger():
     logger.addHandler(stream_handler)
 
     # 文件处理器，设置的级别为INFO
-    file_handler = logging.FileHandler(filename='{}-{}-{}.log'.format(today.year, today.month, today.day))
+    file_handler = logging.FileHandler(filename='../logs/{}-{}-{}.log'.format(today.year, today.month, today.day),
+                                       encoding='utf-8')
     file_handler.setLevel(level=0)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

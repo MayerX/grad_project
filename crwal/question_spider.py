@@ -3,8 +3,8 @@ import time
 
 import openpyexcel
 import requests
-from requests.exceptions import HTTPError
 from bs4 import BeautifulSoup
+from requests.exceptions import HTTPError
 
 from logs.logger import logger
 from pre_question_spider import pre_question_spider
@@ -14,7 +14,7 @@ def spider(universities_code_path):
     universities_code = []
 
     # 读取各大学编号
-    with open(universities_code_path, 'r') as file:
+    with open(universities_code_path, 'r', encoding='utf-8') as file:
         universities_code = file.readlines()
         file.close()
 
@@ -27,15 +27,15 @@ def spider(universities_code_path):
         print('开始爬取{}的招生问题'.format(universities_name))
         logger.info('开始爬取{}的招生问题'.format(universities_name))
         print('------------------------')
-        file_path = 'questions/{}.csv'.format(universities_name)
+        file_path = './data/questions/{}.csv'.format(universities_name)
         spider_to_csv(file_path, forumid[:-1])
-        time.sleep(10)
+        time.sleep(20)
     pass
 
 
 def spider_to_csv(file_path, code):
     # print(file_path + ': ' + code)
-    with open(file_path, 'wb') as file:
+    with open(file_path, 'w', encoding='utf-8') as file:
         # 设置csv写入变量
         writer = csv.writer(file)
         # 设置csv文件标题头
@@ -53,8 +53,8 @@ def spider_to_csv(file_path, code):
         # 进行数据爬取
         for page in range(0, max_page, 15):
             print('------------------------')
-            print("当前页面: ", page / 15)
-            logger.info("当前页面: ", page / 15)
+            print("当前页面: " + str(int(page / 15)))
+            logger.info("当前页面: " + str(int(page / 15)))
             print('------------------------')
             try:
                 response = requests.get(
@@ -73,10 +73,10 @@ def spider_to_csv(file_path, code):
                 question = question.text.replace(" ", "").replace("\r\n", "").replace("\n", "")
                 answer = answer.text.replace("\r\n", "").replace("\n", "").replace(" ", "")[5:]
                 # print('ID: ' + index.__str__() + ' - ''question: ', question, ' - ', 'answer: ', answer)
-                logger.info('ID: ' + index.__str__() + ' - ''question: ', question, ' - ', 'answer: ', answer)
+                logger.info('ID: ' + str(index) + ' - ' + 'question: ' + question + ' - ' + 'answer: ' + answer)
                 writer.writerow([index, question, answer])
                 index += 1
-            time.sleep(1)
+            time.sleep(2)
         file.close()
     pass
 
