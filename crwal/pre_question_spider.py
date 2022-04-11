@@ -45,7 +45,7 @@ def pre_question_spider(province_id):
             ActionChains(driver).click(next_page).perform()
     with open('data/universities_code.txt', 'w', encoding='utf-8') as file:
         for index in range(universitie_names.__len__()):
-            if universitie_names[index].find('学院') == -1:
+            if universitie_names[index].find('学院') == -1 and universitie_names[index].find('学校') == -1:
                 file.write(universitie_names[index] + ':' + str(forumid[index]) + '\n')
                 logger.info(universitie_names[index] + ':' + str(forumid[index]))
         file.close()
