@@ -40,12 +40,12 @@ def spider_to_csv(file_path, code):
     # print(file_path + ': ' + code)
     with open(file_path, 'w', encoding='utf-8') as file:
         # 设置csv写入变量
-        writer = csv.writer(file)
+        writer = csv.writer(file, lineterminator='\n')
         # 设置csv文件标题头
-        writer.writerow(['ID','标签', '问题', '答案'])
+        writer.writerow(['ID', '标签', '问题', '答案'])
         # 获取最大页数
         response = requests.get(
-            'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2017,start-{}.dhtml'.format(
+            'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2013,start-{}.dhtml'.format(
                 code, 0))
         # 解析网页信息
         soup = BeautifulSoup(response.content, 'lxml')
@@ -131,7 +131,32 @@ def spider_to_excel(province_id):
     book.save('data/question_answer.xlsx')
 
 
+def data_process(questions_file_path):
+    # print('问题文件夹地址: ' + questions_file_path)
+    question_files_name = os.listdir(questions_file_path)
+    index = 1
+    # print(files)
+    with open('./data/question_answer.csv', 'w', encoding='utf-8') as file:
+        writer = csv.writer(file, lineterminator='\n')
+        writer.writerow(['ID', '问题', '答案'])
+        for question_file_name in question_files_name:
+            logger.info('开始处理{}'.format(question_file_name))
+            with open('./data/questions/{}'.format(question_file_name), 'r', encoding='utf-8') as question_file:
+                data = question_file.readlines()[1:]
+                for row in data:
+                    if len(row) != 1:
+                        cols = row.split(',')
+                        writer.writerow([index, cols[2], cols[3]])
+                        index += 1
+                question_file.close()
+        file.close()
+    logger.info('数据处理完成')
+    pass
+
+
 if __name__ == "__main__":
     logger = logger()
     universities_code_path = 'data/universities_code.txt'
+    questions_file_path = './data/questions'
     spider(universities_code_path)
+    data_process(questions_file_path)

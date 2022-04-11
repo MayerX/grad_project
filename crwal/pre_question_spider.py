@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from logs.logger import logger
 
 
 def pre_question_spider(province_id):
@@ -28,26 +29,29 @@ def pre_question_spider(province_id):
     # 用bs4解析网页信息
     soup = BeautifulSoup(driver.page_source, 'lxml')
     # 设置该省份所在大学数的最大页数
-    # max_page = int(soup.find_all('li')[-2].text[0])
-    max_page = 1
+    max_page = int(soup.find_all('li')[-2].text[0])
+    # max_page = 1
     # 读取该省份所有大学在该网页的编码
     for page in range(max_page):
         time.sleep(3)
+        logger.info('Page: ' + page.__str__())
         soup = BeautifulSoup(driver.page_source, 'lxml')
         items = soup.find_all('div', class_="yx-item")
         for item in items:
             forumid.append(item.find_all('a')[0]['href'].split(',')[1])
             universitie_names.append(item.find('span', class_='yxmc-span').text)
-        next_page = driver.find_element(by=By.LINK_TEXT, value='下一页')
-        if next_page is not None:
-            ActionChains(driver).click().perform()
-    with open('data/universities_code.txt', 'w') as file:
+        if page != max_page - 1:
+            next_page = driver.find_element(by=By.LINK_TEXT, value='下一页')
+            ActionChains(driver).click(next_page).perform()
+    with open('data/universities_code.txt', 'w', encoding='utf-8') as file:
         for index in range(universitie_names.__len__()):
-            file.write(universitie_names[index] + ':' + str(forumid[index]) + '\n')
-            print(universitie_names[index] + ':' + str(forumid[index]))
+            if universitie_names[index].find('学院') == -1:
+                file.write(universitie_names[index] + ':' + str(forumid[index]) + '\n')
+                logger.info(universitie_names[index] + ':' + str(forumid[index]))
         file.close()
     return universitie_names, forumid
 
 
 if __name__ == '__main__':
+    logger = logger()
     pre_question_spider(44)
