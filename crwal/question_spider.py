@@ -50,6 +50,9 @@ def spider_to_csv(file_path, code):
         # 解析网页信息
         soup = BeautifulSoup(response.content, 'lxml')
         numbers = soup.find_all('li', attrs={"class": "lip"})
+        if numbers[-3].text == '\ue603':
+            file.close()
+            return
         max_page = int(numbers[-3].text) * 15
         # 设置ID
         index = 0
@@ -61,7 +64,7 @@ def spider_to_csv(file_path, code):
             print('------------------------')
             try:
                 response = requests.get(
-                    'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2017,start-{}.dhtml'.format(
+                    'https://gaokao.chsi.com.cn/zxdy/forum--method-listDefault,{},year-2013,start-{}.dhtml'.format(
                         code, page))
             except HTTPError as e:
                 logger.error(e)
@@ -138,7 +141,7 @@ def data_process(questions_file_path):
     # print(files)
     with open('./data/question_answer.csv', 'w', encoding='utf-8') as file:
         writer = csv.writer(file, lineterminator='\n')
-        writer.writerow(['ID', '问题', '答案'])
+        writer.writerow(['ID','标签', '问题', '答案'])
         for question_file_name in question_files_name:
             logger.info('开始处理{}'.format(question_file_name))
             with open('./data/questions/{}'.format(question_file_name), 'r', encoding='utf-8') as question_file:
@@ -146,7 +149,7 @@ def data_process(questions_file_path):
                 for row in data:
                     if len(row) != 1:
                         cols = row.split(',')
-                        writer.writerow([index, cols[2], cols[3]])
+                        writer.writerow([index, cols[1], cols[2], cols[3]])
                         index += 1
                 question_file.close()
         file.close()
@@ -158,5 +161,5 @@ if __name__ == "__main__":
     logger = logger()
     universities_code_path = 'data/universities_code.txt'
     questions_file_path = './data/questions'
-    spider(universities_code_path)
+    # spider(universities_code_path)
     data_process(questions_file_path)
