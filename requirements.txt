@@ -128,7 +128,7 @@ nose @ file:///opt/concourse/worker/volumes/live/a029938e-1732-4cd8-5b98-0542283
 notebook==6.0.3
 numba==0.50.1
 numexpr==2.7.1
-numpy==1.18.5
+numpy~=1.21.2
 numpydoc @ file:///tmp/build/80754af9/numpydoc_1594166760263/work
 oauthlib==3.1.0
 olefile==0.46
@@ -252,8 +252,13 @@ XlsxWriter==1.2.9
 xlwings==0.19.5
 xlwt==1.3.0
 xmltodict==0.12.0
-yapf @ file:///tmp/build/80754af9/yapf_1593528177422/work
+yapf@ file:///tmp/build/80754af9/yapf_1593528177422/work
 zict==2.0.0
 zipp==3.1.0
 zope.event==4.4
 zope.interface==4.7.1
+
+openpyexcel~=2.5.14
+requests~=2.25.1
+pandas~=1.1.3
+distance~=0.1.3

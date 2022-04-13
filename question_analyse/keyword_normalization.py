@@ -11,7 +11,7 @@ from question_analyse.time_normalization import text_to_year
 
 
 # 时间正则化
-def time_word_normalize(text: str) -> str:
+def time_word_normalize(text: str):
     year_list = text_to_year(text)
     if year_list:
         return str(year_list[0])
@@ -20,7 +20,7 @@ def time_word_normalize(text: str) -> str:
 
 
 # 地点正则化
-def province_word_normalize(text: str) -> str:
+def province_word_normalize(text: str):
     province_list = text_to_province(text)
     # print(province_list)
     if province_list:

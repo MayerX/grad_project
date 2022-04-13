@@ -1,9 +1,13 @@
 import pickle
+import re
 
-common_keyword_dict = {"year": "年份", "major": "专业", "province": "省份", "course": "科类"}
+from logs.logger import logger
+
+trait_dict = {"year": "年份", "major": "专业", "province": "省份", "course": "类型"}
 question_template = "{year}{major}{province}{course}{keyword}"
 
 
+# 所有子集
 def subset(question_keyword_list: list):
     result = [[]]
     size = len(question_keyword_list)
@@ -15,8 +19,9 @@ def subset(question_keyword_list: list):
 
 def create_template_plan(template_path):
     plan_dict = {"number": ["招生人数", "招生计划", "招多少人", "招生计划是多少", "招生人数是多少"]}
-    answer = ["{year}{major}{province}招收{type}{number}人，学费为{tuition}"]
-    create_template(plan_dict, answer, template_path)
+    answer_template = ["{year}{major}{province}招收{course}{number}人，学费为{tuition}"]
+    create_template(plan_dict, answer_template, template_path)
+    pass
 
 
 def create_template_score(template_path):
@@ -24,41 +29,38 @@ def create_template_score(template_path):
                   "lowest": ["最低分", "平均分是多少"],
                   "average": ["平均分", "最低分是多少", "分数线", "分数线是多少"],
                   "number": ["录取人数", "录取多少人"]}
-    answer = ["{year}{major}{province}{type}最高分是{highest}",
-              "{year}{major}{province}{type}平均分是{average}",
-              "{year}{major}{province}{type}最低分是{lowest}",
-              "{year}{major}{province}{type}录取人数是{amount}"]
-    create_template(score_dict, answer, template_path)
+    answer_template = ["{year}{major}{province}{course}最高分是{highest}",
+                       "{year}{major}{province}{course}最低分是{lowest}",
+                       "{year}{major}{province}{course}平均分是{average}",
+                       "{year}{major}{province}{course}录取人数是{number}"]
+    create_template(score_dict, answer_template, template_path)
+    pass
 
 
-def create_template(kind_dict, answer, template_path):
-    """
-    :param kind_dict:
-    :param answer:
-    :param template_path:
-    :return:
-    """
-    print("开始构建模版")
-    # 问题特殊关键字
-    question_keyword_list = list(kind_dict.keys())
-    common_keyword_list = list(common_keyword_dict.keys())
+def create_template(kind_dict, answer_template, template_path):
+    # 具体问题特征词列表
+    keyword_list = list(kind_dict)
+    # 问句模版特征词列表
+    trait_list = list(trait_dict.keys())
     # 模版文件
-    template_dict = {"common_keyword": common_keyword_dict, "question_keyword": question_keyword_list, "answer": answer}
+    template_dict = {"trait_dict": trait_dict, "keyword_list": keyword_list,
+                     "answer": answer_template}
     # 构建所有问题
     questions = []
     # 所有子集
-    question_subset = subset(common_keyword_list)
-    print(question_keyword_list)
-    for index_question in range(len(question_keyword_list)):
-        key_list = kind_dict[question_keyword_list[index_question]]
-        print(key_list)
+    logger.info('构建该模版的所有子集')
+    question_subset = subset(trait_list)
+    print(keyword_list)
+    logger.info('构建模版')
+    for index_question in range(len(keyword_list)):
+        key_list = kind_dict[keyword_list[index_question]]
         for key in key_list:
             for index_subset in question_subset:
                 d_question = question_template.format(year="{year}", major="{major}", course="{course}",
                                                       province="{province}", keyword=key) + "---" + str(index_question)
                 if not index_subset:
                     questions.append(d_question)
-                elif len(index_subset) == len(common_keyword_list):
+                elif len(index_subset) == len(trait_list):
                     continue
                 else:
                     for index in index_subset:
@@ -68,16 +70,44 @@ def create_template(kind_dict, answer, template_path):
     # print(template_dict)
     with open(template_path, "wb") as file:
         pickle.dump(template_dict, file)
-    print(template_dict)
+    logger.info(template_dict)
 
 
 def load_template(template_path: str):
     with open(template_path, "rb") as file:
         template_dict = pickle.load(file)
-    return template_dict["common_keyword"], template_dict["question_keyword"], template_dict["answer"], \
+    return template_dict["trait_dict"], template_dict["keyword_list"], template_dict["answer"], \
            template_dict["questions"]
 
 
+def build_sql_sentence(match_question_template: str, template_type: str, keywords: dict):
+    slots = match_question_template.split('}')[:-1]
+    sql_sentence = ""
+
+    for slot in slots:
+        value = keywords[slot[1:]]
+        if value == "":
+            continue
+        else:
+            sql_sentence += slots[1:] + "='" + value + "' and "
+    if sql_sentence != "":
+        sql_sentence = "select * from " + template_type + " where " + sql_sentence[:-5] + ";"
+
+    return sql_sentence
+
+
+# {year}{major}{province}{course}平均分是{average}
+def build_answer(answer_template: str, sql_query: tuple):
+    pattern = re.compile(r"[{].*?[}]")
+    slots = re.findall(pattern, answer_template)
+    answer = ''
+    for slot in slots:
+        answer += sql_query[slot[1:-1]]
+
+    return answer
+
+
 if __name__ == "__main__":
+    logger = logger()
     create_template_score("Template/score")
     create_template_plan("Template/plan")
