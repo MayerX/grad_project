@@ -1,11 +1,3 @@
-中山大学:forumid-17135
-暨南大学:forumid-387863
-汕头大学:forumid-382983
-华南理工大学:forumid-9971
-华南农业大学:forumid-92744
-广东海洋大学:forumid-8700
-广州医科大学:forumid-428030
-广东医科大学:forumid-401520
 广州中医药大学:forumid-380254
 广东药科大学:forumid-379583
 华南师范大学:forumid-55871
